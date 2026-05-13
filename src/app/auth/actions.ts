@@ -78,20 +78,24 @@ export async function signIn(formData: FormData) {
 
   revalidatePath("/", "layout")
 
-  if (redirectTo && redirectTo.startsWith("/")) {
-    redirect(redirectTo)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  let role = "buyer"
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single()
+
+    if (profile?.role) {
+      role = profile.role
+    }
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .single()
-
-  if (profile?.role === "seller" || profile?.role === "admin") {
-    redirect("/dashboard")
-  } else {
-    redirect("/")
-  }
+  return { success: true, role, redirectTo }
 }
 
 export async function signOut() {

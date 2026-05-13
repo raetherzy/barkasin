@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useState } from "react"
 
 function LoginForm() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, refresh } = useAuth()
   const searchParams = useSearchParams()
   const router = useRouter()
   const redirectTo = searchParams.get("redirect") || ""
@@ -16,16 +16,19 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
+
   useEffect(() => {
     if (!authLoading && user) {
       router.replace(redirectTo || "/")
     }
   }, [authLoading, user, router, redirectTo])
 
-  if (authLoading) {
+  if (authLoading || loading) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-zinc-400">Memuat...</p>
+        <p className="text-sm text-zinc-400">
+          {loading ? "Login berhasil..." : "Memuat..."}
+        </p>
       </div>
     )
   }
@@ -47,13 +50,32 @@ function LoginForm() {
     setLoading(true)
     setError("")
 
-    const result = await signIn(formData)
+    let result
+    try {
+      result = await signIn(formData)
+    } catch {
+      setError("Terjadi kesalahan. Silakan coba lagi.")
+      setLoading(false)
+      return
+    }
 
     if (result?.error) {
       setError(result.error)
       setLoading(false)
+      return
     }
+
+    await refresh()
+
+    let destination = redirectTo
+    if (!destination) {
+      const role = (result as { role?: string })?.role
+      destination = role === "seller" || role === "admin" ? "/dashboard" : "/"
+    }
+
+    router.replace(destination)
   }
+
 
   return (
     <>
