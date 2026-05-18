@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
+import ProductFormWrapper from "./ProductFormWrapper"
 
 export default async function DashboardPage({
   searchParams,
@@ -18,13 +19,18 @@ export default async function DashboardPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, phone")
     .eq("id", user.id)
     .single()
 
   if (profile?.role !== "seller" && profile?.role !== "admin") {
     redirect("/")
   }
+
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name")
+    .order("name")
 
   const params = await searchParams
 
@@ -39,7 +45,7 @@ export default async function DashboardPage({
         </div>
       )}
 
-      <p className="text-zinc-600">Selamat datang! Kelola produk Anda di sini.</p>
+      <ProductFormWrapper categories={categories ?? []} defaultPhone={profile?.phone ?? ""} />
     </main>
   )
 }
