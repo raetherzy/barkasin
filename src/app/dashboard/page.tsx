@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import ProductFormWrapper from "./ProductFormWrapper"
+import type { Product } from "./ProductList"
 
 export default async function DashboardPage({
   searchParams,
@@ -32,6 +33,12 @@ export default async function DashboardPage({
     .select("id, name")
     .order("name")
 
+  const { data: products } = await supabase
+    .from("products")
+    .select("*, images:product_images(*)")
+    .eq("seller_id", user.id)
+    .order("created_at", { ascending: false })
+
   const params = await searchParams
 
   return (
@@ -45,7 +52,11 @@ export default async function DashboardPage({
         </div>
       )}
 
-      <ProductFormWrapper categories={categories ?? []} defaultPhone={profile?.phone ?? ""} />
+      <ProductFormWrapper
+        categories={categories ?? []}
+        defaultPhone={profile?.phone ?? ""}
+        products={(products as Product[]) ?? []}
+      />
     </main>
   )
 }

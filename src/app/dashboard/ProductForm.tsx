@@ -1,22 +1,39 @@
 "use client"
 
-import { createProduct } from "@/app/dashboard/actions"
+import { createProduct, updateProduct } from "@/app/dashboard/actions"
 import { useState, useRef } from "react"
+import type { Product } from "./ProductList"
 
 type Category = { id: string; name: string }
 
 type Props = {
   categories: Category[]
   defaultPhone: string
+  editProduct?: Product | null
+  onCancelEdit?: () => void
+  onSaved?: () => void
 }
 
-export default function ProductForm({ categories, defaultPhone }: Props) {
+export default function ProductForm({
+  categories,
+  defaultPhone,
+  editProduct,
+  onCancelEdit,
+  onSaved,
+}: Props) {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
   const [previews, setPreviews] = useState<string[]>([])
-  const [priceDisplay, setPriceDisplay] = useState("")
+  const [priceDisplay, setPriceDisplay] = useState(
+    editProduct ? editProduct.price.toLocaleString("id-ID") : ""
+  )
+  const [existingImages, setExistingImages] = useState(
+    editProduct?.images ?? []
+  )
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const isEditing = !!editProduct
 
   function handlePriceChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value.replace(/\D/g, "")
@@ -32,6 +49,12 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
     if (!files) return
 
     const urls: string[] = []
+    const total = existingImages.length + files.length
+    if (total > 5) {
+      setError("Maksimal 5 foto. Hapus foto lama terlebih dahulu.")
+      return
+    }
+
     for (const file of files) {
       if (file.size > 2 * 1024 * 1024) {
         setError("Setiap foto maksimal 2MB.")
@@ -55,6 +78,16 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
     }
   }
 
+  function removeExistingImage(imageId: number) {
+    const newImages = existingImages.filter((img) => img.id !== imageId)
+    if (newImages.length + previews.length === 0) {
+      setError("Minimal 1 foto wajib diunggah.")
+      return
+    }
+    setError("")
+    setExistingImages(newImages)
+  }
+
   async function handleSubmit(formData: FormData) {
     setError("")
     setSuccess("")
@@ -70,7 +103,13 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
       }
     }
 
-    const result = await createProduct(formData)
+    if (isEditing) {
+      formData.set("product_id", String(editProduct.id))
+      formData.set("keep_images", existingImages.map((i) => i.id).join(","))
+    }
+
+    const action = isEditing ? updateProduct : createProduct
+    const result = await action(formData)
 
     if (result?.error) {
       setError(result.error)
@@ -78,14 +117,18 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
       return
     }
 
-    setSuccess("Produk berhasil dipasang!")
+    setSuccess(isEditing ? "Produk berhasil diperbarui!" : "Produk berhasil dipasang!")
     setPreviews([])
+    setExistingImages([])
     setLoading(false)
+    onSaved?.()
   }
 
   return (
     <div className="max-w-2xl">
-      <h2 className="text-lg font-semibold mb-4">Pasang Iklan Baru</h2>
+      <h2 className="text-lg font-semibold mb-4">
+        {isEditing ? "Edit Produk" : "Pasang Iklan Baru"}
+      </h2>
 
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -111,6 +154,7 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
             required
             minLength={5}
             maxLength={200}
+            defaultValue={editProduct?.title}
             className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="Contoh: iPhone 12 64GB Hitam"
           />
@@ -125,6 +169,7 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
               id="category_id"
               name="category_id"
               required
+              defaultValue={editProduct?.category_id}
               className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
             >
               <option value="">Pilih kategori</option>
@@ -144,6 +189,7 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
               id="condition"
               name="condition"
               required
+              defaultValue={editProduct?.condition}
               className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
             >
               <option value="">Pilih kondisi</option>
@@ -180,7 +226,7 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
             name="contact_phone"
             type="text"
             required
-            defaultValue={defaultPhone}
+            defaultValue={editProduct?.contact_phone ?? defaultPhone}
             className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="Contoh: 081234567890"
           />
@@ -196,6 +242,7 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
             name="location"
             type="text"
             maxLength={200}
+            defaultValue={editProduct?.location ?? ""}
             className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="Contoh: Jakarta Selatan"
           />
@@ -211,6 +258,7 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
             required
             minLength={20}
             rows={4}
+            defaultValue={editProduct?.description}
             className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y"
             placeholder="Deskripsikan kondisi, spesifikasi, dan informasi penting lainnya..."
           />
@@ -221,6 +269,32 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
             Foto Produk
             <span className="text-zinc-400 font-normal ml-1">(1-5 foto, JPG/PNG, max 2MB)</span>
           </label>
+
+          {existingImages.length > 0 && (
+            <div className="flex gap-3 mb-3 flex-wrap">
+              {existingImages.map((img) => (
+                <div
+                  key={img.id}
+                  className="relative w-24 h-24 rounded-lg overflow-hidden border border-zinc-200"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={img.image_url}
+                    alt="Existing"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeExistingImage(img.id)}
+                    className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center hover:bg-red-600"
+                  >
+                    &times;
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <input
             ref={fileInputRef}
             type="file"
@@ -253,13 +327,26 @@ export default function ProductForm({ categories, defaultPhone }: Props) {
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {loading ? "Menyimpan..." : "Pasang Iklan"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? "Menyimpan..." : isEditing ? "Simpan Perubahan" : "Pasang Iklan"}
+          </button>
+
+          {isEditing && onCancelEdit && (
+            <button
+              type="button"
+              onClick={onCancelEdit}
+              disabled={loading}
+              className="text-sm text-zinc-500 hover:text-zinc-700 transition-colors"
+            >
+              Batal
+            </button>
+          )}
+        </div>
       </form>
     </div>
   )
