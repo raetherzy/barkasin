@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 
 type ProductCardProps = {
-  id: string
+  id: number
   title: string
   price: number
   location?: string | null
