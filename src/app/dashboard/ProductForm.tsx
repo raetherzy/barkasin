@@ -9,6 +9,7 @@ type Category = { id: string; name: string }
 type Props = {
   categories: Category[]
   defaultPhone: string
+  role: string
   editProduct?: Product | null
   onCancelEdit?: () => void
   onSaved?: () => void
@@ -17,6 +18,7 @@ type Props = {
 export default function ProductForm({
   categories,
   defaultPhone,
+  role,
   editProduct,
   onCancelEdit,
   onSaved,
@@ -231,6 +233,24 @@ export default function ProductForm({
             placeholder="Contoh: 081234567890"
           />
         </div>
+
+        {role === "admin" && (
+          <div>
+            <label htmlFor="contact_email" className="block text-sm font-medium text-zinc-700 mb-1">
+              Email Penjual
+              <span className="text-zinc-400 font-normal ml-1">(wajib untuk admin)</span>
+            </label>
+            <input
+              id="contact_email"
+              name="contact_email"
+              type="email"
+              required
+              defaultValue={editProduct ? editProduct.contact_email ?? "" : ""}
+              className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="Contoh: seller@email.com"
+            />
+          </div>
+        )}
 
         <div>
           <label htmlFor="location" className="block text-sm font-medium text-zinc-700 mb-1">

@@ -43,7 +43,9 @@ export default async function DashboardPage({
 
   return (
     <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">Dashboard Seller</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        {profile?.role === "admin" ? "Dashboard Admin" : "Dashboard Seller"}
+      </h1>
 
       {params.welcome === "1" && (
         <div className="mb-6 rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-800">
@@ -55,6 +57,7 @@ export default async function DashboardPage({
       <ProductFormWrapper
         categories={categories ?? []}
         defaultPhone={profile?.phone ?? ""}
+        role={profile?.role ?? "seller"}
         products={(products as Product[]) ?? []}
       />
     </main>

@@ -17,6 +17,7 @@ export type Product = {
   condition: string
   location: string | null
   contact_phone: string
+  contact_email: string | null
   category_id: number
   description: string
   created_at: string
@@ -86,9 +87,9 @@ export default function ProductList({
         {products.map((product) => (
           <div
             key={product.id}
-            className="flex items-start gap-4 rounded-xl border border-zinc-200 bg-white p-4"
+            className="flex flex-wrap sm:flex-nowrap items-start gap-3 sm:gap-4 rounded-xl border border-zinc-200 bg-white p-3 sm:p-4"
           >
-            <div className="w-20 h-20 shrink-0 rounded-lg bg-zinc-100 overflow-hidden">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg bg-zinc-100 overflow-hidden">
               {product.images[0] ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -98,7 +99,7 @@ export default function ProductList({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-zinc-300">
-                  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
@@ -122,32 +123,32 @@ export default function ProductList({
                 >
                   {product.condition}
                 </span>
-                {product.location && <span>{product.location}</span>}
+                {product.location && <span className="truncate">{product.location}</span>}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto sm:shrink-0">
               <button
                 onClick={() => onEdit(product)}
                 disabled={deletingId !== null}
-                className="rounded-lg px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                className="flex-1 sm:flex-initial rounded-lg px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
               >
                 Edit
               </button>
 
               {confirmId === product.id ? (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-1 sm:flex-initial">
                   <button
                     onClick={() => handleDelete(product.id)}
                     disabled={deletingId === product.id}
-                    className="rounded-lg px-3 py-1.5 text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
+                    className="flex-1 rounded-lg px-3 py-1.5 text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
                   >
                     {deletingId === product.id ? "..." : "Ya"}
                   </button>
                   <button
                     onClick={() => setConfirmId(null)}
                     disabled={deletingId === product.id}
-                    className="rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-500 hover:bg-zinc-100 transition-colors disabled:opacity-50"
+                    className="flex-1 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-500 hover:bg-zinc-100 transition-colors disabled:opacity-50"
                   >
                     Batal
                   </button>
@@ -156,7 +157,7 @@ export default function ProductList({
                 <button
                   onClick={() => setConfirmId(product.id)}
                   disabled={deletingId !== null}
-                  className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                  className="flex-1 sm:flex-initial rounded-lg px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
                 >
                   Hapus
                 </button>

@@ -35,6 +35,7 @@ export async function createProduct(formData: FormData) {
   const condition = (formData.get("condition") as string)?.trim()
   const location = (formData.get("location") as string)?.trim() || null
   const contactPhone = (formData.get("contact_phone") as string)?.trim()
+  const contactEmail = (formData.get("contact_email") as string)?.trim() || null
   const imageFiles = formData.getAll("images") as File[]
 
   // Validation
@@ -61,6 +62,10 @@ export async function createProduct(formData: FormData) {
 
   if (!contactPhone || contactPhone.length < 8) {
     return { error: "Nomor telepon wajib diisi (minimal 8 digit)." }
+  }
+
+  if (profile?.role === "admin" && (!contactEmail || !contactEmail.includes("@"))) {
+    return { error: "Email penjual wajib diisi dengan format valid." }
   }
 
   if (imageFiles.length === 0 || imageFiles.length > MAX_FILES) {
@@ -115,6 +120,7 @@ export async function createProduct(formData: FormData) {
       condition,
       location,
       contact_phone: contactPhone,
+      contact_email: contactEmail,
     })
     .select("id")
     .single()
@@ -164,6 +170,7 @@ export async function updateProduct(formData: FormData) {
   const condition = (formData.get("condition") as string)?.trim()
   const location = (formData.get("location") as string)?.trim() || null
   const contactPhone = (formData.get("contact_phone") as string)?.trim()
+  const contactEmail = (formData.get("contact_email") as string)?.trim() || null
   const keepIdsStr = (formData.get("keep_images") as string) || ""
   const keepIds = keepIdsStr ? keepIdsStr.split(",").map(Number) : []
   const newFiles = formData.getAll("images") as File[]
@@ -213,6 +220,10 @@ export async function updateProduct(formData: FormData) {
 
   if (!contactPhone || contactPhone.length < 8) {
     return { error: "Nomor telepon wajib diisi (minimal 8 digit)." }
+  }
+
+  if (profile?.role === "admin" && (!contactEmail || !contactEmail.includes("@"))) {
+    return { error: "Email penjual wajib diisi dengan format valid." }
   }
 
   // Get existing images
@@ -324,6 +335,7 @@ export async function updateProduct(formData: FormData) {
       condition,
       location,
       contact_phone: contactPhone,
+      contact_email: contactEmail,
       updated_at: new Date().toISOString(),
     })
     .eq("id", productId)

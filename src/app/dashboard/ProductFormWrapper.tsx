@@ -10,10 +10,12 @@ type Category = { id: string; name: string }
 export default function ProductFormWrapper({
   categories,
   defaultPhone,
+  role,
   products,
 }: {
   categories: Category[]
   defaultPhone: string
+  role: string
   products: Product[]
 }) {
   const [showForm, setShowForm] = useState(false)
@@ -71,6 +73,7 @@ export default function ProductFormWrapper({
       <ProductForm
         categories={categories}
         defaultPhone={defaultPhone}
+        role={role}
         editProduct={editingProduct}
         onCancelEdit={handleCancelEdit}
         onSaved={handleSaved}
